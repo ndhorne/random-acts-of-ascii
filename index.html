@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      Random Acts of ASCII
+    </title>
+    <link href="styles.css" rel="stylesheet" type="text/css" />
+  </head>
+  
+  <body>
+    <div id="game">
+      <h1 id="title">
+        Random Acts of ASCII
+      </h1>
+      
+      
+      <div id="main">
+        <p>
+          Can you unscramble this common expression?
+        </p>
+        
+        <div id="challenge-response">
+          <span id="challenge"></span>
+          <br />
+          <input type="text" id="response" autofocus />
+          <br />
+          <button type="button" id="answer" title="Submit solution"
+            disabled
+          >
+            Solve
+          </button>
+          <button type="button" id="pass" title="Pass for now" disabled>
+            Pass
+          </button>
+        </div>
+        
+        <div id="hint">
+          <button type="button" id="getHint" title="Get hint" disabled>
+            Hint
+          </button><span style="font-weight: 700;">:</span>
+          <br />
+          <span id="hintText"></span>
+        </div>
+        
+        <div id="reveal">
+          <span style="font-size: 14px;">
+            Reveal by
+          </span>
+          <button type="button" id="revealChar"
+            title="Reveal next letter" disabled
+          >
+            letter
+          </button>
+          <button type="button" id="revealWord" title="Reveal next word"
+            disabled
+          >
+            word
+          </button>
+          <button type="button" id="revealPhrase" title="Reveal phrase"
+            disabled
+          >
+            phrase
+          </button>
+        </div>
+      </div>
+      
+      <div id="options">
+      <input
+        type="checkbox" id="infiniswap" name="infiniswap" checked
+      />
+      <label
+        for="infiniswap"
+        title="Swaps two random characters of a random word in perpetuity"
+      >
+        Infiniswap
+      </label>
+      </div>
+      
+      <div id="about">
+        <button type="button" id="aboutDialog"
+          title="About Random Acts of ASCII"
+        >
+          About
+        </button>
+      </div>
+    </div>
+    
+    <script src="randomactsofascii.js"></script>
+  </body>
+</html>
