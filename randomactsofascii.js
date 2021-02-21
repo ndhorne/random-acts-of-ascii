@@ -258,7 +258,7 @@ function setChallenge(indexArg) {
     index = indexArg;
   }
   
-  phrase = phrases[index].phrase.toLowerCase();
+  phrase = phrases[index].phrase.toLowerCase().trim();
   
   do {
     challenge = randomizeString(phrase);
@@ -421,7 +421,7 @@ function initGame() {
   setChallenge();
   
   answerButton.addEventListener("click", function(event) {
-    if (responseElem.value.toLowerCase() == phrase) {
+    if (responseElem.value.toLowerCase().trim() == phrase) {
       clearInterval(infiniswapInterval);
       
       challengeElem.innerHTML = phrase;
