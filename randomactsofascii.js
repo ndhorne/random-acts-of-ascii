@@ -108,7 +108,11 @@ function isFullyRandom(str1, str2, delimiter = " ", exclusions = []) {
     
     for (let char in occurences) {
       if (occurences[char] > halfLength) {
-        continue outer;
+        if (str1Array[i] == str2Array[i]) {
+          return false;
+        } else {
+          continue outer;
+        }
       }
     }
     
@@ -421,7 +425,10 @@ function initGame() {
   setChallenge();
   
   answerButton.addEventListener("click", function(event) {
-    if (responseElem.value.toLowerCase().trim() == phrase) {
+    if (
+      responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
+      == phrase
+    ) {
       clearInterval(infiniswapInterval);
       
       challengeElem.innerHTML = phrase;
