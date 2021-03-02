@@ -16,24 +16,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 "use strict";
 
-let phrase, phrases, challenge, index, previousIndices = [];
+let phrase, phrases, challenge, index, previousIndices;
 let charsRevealed, revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
-let titleStr = "Random Acts of ASCII";
-let aboutText = [
-  "Random Acts of ASCII",
-  "A pointless diversion by Nicholas D. Horne",
-  "Unscramble common but obfuscated colloquial phrases, sayings, "
-  + "expressions, and idioms of the English language. The scope of "
-  + "randomization does not extend beyond the limits defined by the "
-  + "various commonly accepted linguistic word boundaries "
-  + "(spaces, hyphens, etc.) of the phrases provided. Hints and "
-  + "revelations are available to be revealed at the player's own "
-  + "discretion; reserve them for particularly cryptic challenges or "
-  + "\"reserve\" them for any challenges.",
-  "GNU GPLv3 licensed source code available at "
-  + "https://github.com/ndhorne/random-acts-of-ascii"
-];
 
 let titleElem = document.getElementById("title");
 let challengeElem = document.getElementById("challenge");
@@ -138,43 +123,49 @@ function discreteRandomSwap(
   let randomIndex;
   
   strArray.forEach(function(word, index) {
-    if (word.length == 1 && !skip.includes(index)) {
+    if (
+      (
+        word.length == 1 || (challenge.indexOf(word) < charsRevealed)
+      ) && !skip.includes(index)
+    ) {
       skip.push(index);
     }
   });
   
-  do {
-    randomIndex = Math.floor(Math.random() * strArray.length);
-  } while (skip.includes(randomIndex));
-  
-  strArray = strArray.map(function(word, currentIndex) {
-    if (currentIndex != randomIndex) {
-      return word;
-    } else {
-      if (delimiters[0] ? word.includes(delimiters[0]) : false) {
-        return discreteRandomSwap(word, delimiters, exclusions).str;
+  if (skip.length < strArray.length) {
+    do {
+      randomIndex = Math.floor(Math.random() * strArray.length);
+    } while (skip.includes(randomIndex));
+    
+    strArray = strArray.map(function(word, currentIndex) {
+      if (currentIndex != randomIndex) {
+        return word;
       } else {
-        let wordArray, rand1, rand2, temp;
-        
-        wordArray = word.split("");
-        
-        do {
+        if (delimiters[0] ? word.includes(delimiters[0]) : false) {
+          return discreteRandomSwap(word, delimiters, exclusions).str;
+        } else {
+          let wordArray, rand1, rand2, temp;
+          
+          wordArray = word.split("");
+          
           do {
-            rand1 = Math.floor(Math.random() * wordArray.length);
-          } while (exclusions.includes(wordArray[rand1]));
-          do {
-            rand2 = Math.floor(Math.random() * wordArray.length);
-          } while (exclusions.includes(wordArray[rand2]));
-        } while (wordArray[rand1] == wordArray[rand2]);
-        
-        temp = wordArray[rand1];
-        wordArray[rand1] = wordArray[rand2];
-        wordArray[rand2] = temp;
-        
-        return wordArray.join("");
+            do {
+              rand1 = Math.floor(Math.random() * wordArray.length);
+            } while (exclusions.includes(wordArray[rand1]));
+            do {
+              rand2 = Math.floor(Math.random() * wordArray.length);
+            } while (exclusions.includes(wordArray[rand2]));
+          } while (wordArray[rand1] == wordArray[rand2]);
+          
+          temp = wordArray[rand1];
+          wordArray[rand1] = wordArray[rand2];
+          wordArray[rand2] = temp;
+          
+          return wordArray.join("");
+        }
       }
-    }
-  });
+    });
+  }
   
   return {
     str: strArray.join(delimiter),
@@ -189,7 +180,7 @@ function infiniswap(timeout) {
   infiniswapInterval = setInterval(function() {
     let obj;
     
-    function containsSolution(str1, str2) {
+    function containsSolution(str1, str2, skip = []) {
       if (typeof str1 != "string" || typeof str2 != "string") {
         throw new Error("Arguments must both be of type string");
       }
@@ -201,7 +192,7 @@ function infiniswap(timeout) {
       let str2Array = str2.split(" ");
       
       for (let i = 0; i < str1Array.length; i++) {
-        if (str1Array[i].length < 3) {
+        if (skip.includes(i) || str1Array[i].length < 3) {
           continue;
         }
         
@@ -221,7 +212,7 @@ function infiniswap(timeout) {
       obj = discreteRandomSwap(
         challenge, [" ", "-"], [], infiniswapped
       );
-    } while (containsSolution(phrase, obj.str));
+    } while (containsSolution(phrase, obj.str, infiniswapped));
     
     if (infiniswapped.length == 0) {
       obj.skipped.forEach(function(index) {
@@ -229,7 +220,9 @@ function infiniswap(timeout) {
       });
     }
     
-    infiniswapped.push(obj.last);
+    if (obj.last != undefined) {
+      infiniswapped.push(obj.last);
+    }
     
     challengeElem.innerHTML = challenge = obj.str;
   }, timeout);
@@ -243,7 +236,6 @@ function setChallenge(indexArg) {
   charsRevealed = 0;
   hintElem.innerHTML = "";
   responseElem.value = "";
-  infiniswapCheckbox.disabled = false;
   
   if (
     typeof indexArg != "number"
@@ -262,7 +254,8 @@ function setChallenge(indexArg) {
     index = indexArg;
   }
   
-  phrase = phrases[index].phrase.toLowerCase().trim();
+  phrase =
+    phrases[index].phrase.toLowerCase().trim().replace(/ {2,}/g, " ");
   
   do {
     challenge = randomizeString(phrase);
@@ -270,34 +263,23 @@ function setChallenge(indexArg) {
   
   challengeElem.innerHTML = challenge;
   
-  /*
-  responseElem.style.width = Math.max(
-    answerButton.getBoundingClientRect().width
-    + passButton.getBoundingClientRect().width,
-    challengeElem.getBoundingClientRect().width
-  ) + "px";
-  */
-  
   if (infiniswapCheckbox.checked) {
     infiniswap(infiniswapDelay);
   }
 }
 
-function revealUntilNextCharMismatch() {
+function revealUntilNextCharMismatch(stopChars = []) {
   function seek(current) {
     while (
-      phrase[current] == challenge[current] && current < phrase.length
+      phrase[current] == challenge[current]
+      && current < phrase.length
+      && !stopChars.includes(phrase[current])
     ) {
       current++;
     }
     
     return current;
   }
-  
-  if (infiniswapCheckbox.checked) {
-    clearInterval(infiniswapInterval);
-  }
-  infiniswapCheckbox.disabled = true;
   
   let current = seek(charsRevealed);
   let randomizedIndex = challenge.indexOf(phrase[current], current);
@@ -308,12 +290,12 @@ function revealUntilNextCharMismatch() {
   strArray[current] = strArray[randomizedIndex];
   strArray[randomizedIndex] = temp;
   
-  challenge = strArray.join("");
-  challengeElem.innerHTML = challenge;
+  challengeElem.innerHTML = challenge = strArray.join("");
   
-  charsRevealed = seek(current);
+  charsRevealed = ++current;
 }
 
+/*
 function revealUntilNextWordMismatch() {
   let charsUntilNextWordBoundary;
   
@@ -324,7 +306,7 @@ function revealUntilNextWordMismatch() {
   }
   
   while (charsRevealed < charsUntilNextWordBoundary) {
-    revealUntilNextCharMismatch();
+    revealUntilNextCharMismatch([" "]);
   }
 }
 
@@ -333,6 +315,7 @@ function revealUntilEndOfPhrase() {
     revealUntilNextCharMismatch();
   }
 }
+*/
 
 function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   let charsUntilNextWordBoundary;
@@ -346,8 +329,26 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   (function foo(timeout) {
     setTimeout(function() {
       if (charsRevealed < charsUntilNextWordBoundary) {
-        revealUntilNextCharMismatch();
+        revealUntilNextCharMismatch([" "]);
         foo(timeout);
+      }
+      if (
+        charsRevealed > charsUntilNextWordBoundary
+        && phrase[charsRevealed - 1] == " "
+      ) {
+        if (
+          phrase.slice(
+            charsRevealed,
+            phrase.indexOf(" ", charsRevealed)
+          )
+          ==
+          challenge.slice(
+            charsRevealed,
+            challenge.indexOf(" ", charsRevealed)
+          )
+        ) {
+          revealUntilNextWordMismatchTimeoutDelayed(timeout);
+        }
       }
     }, timeout);
   })(timeout);
@@ -365,12 +366,28 @@ function revealUntilEndOfPhraseTimeoutDelayed(timeout) {
 }
 
 function about() {
+  let aboutText = [
+    "Random Acts of ASCII",
+    "A pointless diversion by Nicholas D. Horne",
+    "Unscramble common but obfuscated colloquial phrases, sayings, "
+    + "expressions, and idioms of the English language. The scope of "
+    + "randomization does not extend beyond the limits defined by the "
+    + "various commonly accepted linguistic word boundaries "
+    + "(spaces, hyphens, etc.) of the phrases provided. Hints and "
+    + "revelations are available to be revealed at the player's own "
+    + "discretion; reserve them for particularly cryptic challenges or "
+    + "\"reserve\" them for any challenges.",
+    "GNU GPLv3 licensed source code available at "
+    + "https://github.com/ndhorne/random-acts-of-ascii"
+  ];
+  
   alert(
     aboutText.join("\n\n")
   );
 }
 
 function setTitle() {
+  let titleStr = "Random Acts of ASCII";
   let titleRandom, doneIndices = [];
   
   do {
@@ -417,6 +434,7 @@ function setTitle() {
 }
 
 function initGame() {
+  previousIndices = [];
   charsRevealed = 0;
   responseElem.value = "";
   infiniswapCheckbox.checked = true;
@@ -425,6 +443,18 @@ function initGame() {
   setChallenge();
   
   answerButton.addEventListener("click", function(event) {
+    function numberOf(ch, str) {
+      let count = 0;
+      
+      Array.prototype.forEach.call(str, function(char) {
+        if (char == ch) {
+          count++;
+        }
+      });
+      
+      return count;
+    }
+    
     if (
       responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
       == phrase
@@ -441,7 +471,13 @@ function initGame() {
         + phrase.slice(1)
         + "\""
         + (charsRevealed > 0
-          ? "\n\n(" + charsRevealed + " characters revealed)"
+          ? "\n\n("
+            +
+              (
+                charsRevealed
+                  - numberOf(" ", phrase.slice(0, charsRevealed))
+              )
+            + " letters revealed)"
           : "")
         + (hintElem.innerHTML
           ? "\n\nDid the hint help?"
