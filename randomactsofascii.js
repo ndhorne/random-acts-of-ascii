@@ -178,6 +178,10 @@ function infiniswap(timeout) {
   let infiniswapped = [];
   
   infiniswapInterval = setInterval(function() {
+    if (charsRevealed > phrase.length) {
+      clearInterval(infiniswapInterval);
+    }
+    
     let obj;
     
     function containsSolution(str1, str2, skip = []) {
@@ -209,16 +213,22 @@ function infiniswap(timeout) {
     }
     
     do {
-      obj = discreteRandomSwap(
-        challenge, [" ", "-"], [], infiniswapped
-      );
-    } while (containsSolution(phrase, obj.str, infiniswapped));
+      do {
+        obj = discreteRandomSwap(
+          challenge, [" ", "-"], [], infiniswapped
+        );
+      } while (containsSolution(phrase, obj.str, infiniswapped));
+      
+      if (obj.last == undefined) {
+        infiniswapped = [];
+      }
+    } while (obj.last == undefined && charsRevealed < phrase.length);
     
-    if (infiniswapped.length == 0) {
-      obj.skipped.forEach(function(index) {
+    obj.skipped.forEach(function(index) {
+      if (!infiniswapped.includes(index)) {
         infiniswapped.push(index);
-      });
-    }
+      }
+    });
     
     if (obj.last != undefined) {
       infiniswapped.push(obj.last);
