@@ -17,8 +17,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 "use strict";
 
 let phrase, phrases, challenge, index, previousIndices;
-let charsRevealed, revealDelay = 200, infiniswapDelay = 5000;
+let charsRevealed, wordsRevealed;
+let revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
+let revealWordTimeout, revealPhraseTimeout;
 
 let titleElem = document.getElementById("title");
 let challengeElem = document.getElementById("challenge");
@@ -122,17 +124,7 @@ function discreteRandomSwap(
   let strArray = strArg.split(delimiter);
   let randomIndex;
   
-  strArray.forEach(function(word, index) {
-    if (
-      (
-        word.length == 1 || (challenge.indexOf(word) < charsRevealed)
-      ) && !skip.includes(index)
-    ) {
-      skip.push(index);
-    }
-  });
-  
-  if (skip.length < strArray.length) {
+  if (skip.length < strArg.split(" ").length) {
     do {
       randomIndex = Math.floor(Math.random() * strArray.length);
     } while (skip.includes(randomIndex));
@@ -175,13 +167,15 @@ function discreteRandomSwap(
 }
 
 function infiniswap(timeout) {
-  let infiniswapped = [];
+  let skip = [];
   
   infiniswapInterval = setInterval(function() {
-    if (charsRevealed > phrase.length) {
+    if (charsRevealed > phrase.lastIndexOf(" ") + 1) {
       clearInterval(infiniswapInterval);
+      return;
     }
     
+    let strArray = challenge.split(" ");
     let obj;
     
     function containsSolution(str1, str2, skip = []) {
@@ -208,30 +202,59 @@ function infiniswap(timeout) {
       return false;
     }
     
-    if (infiniswapped.length == phrase.split(" ").length) {
-      infiniswapped = [];
+    function skipAudit() {
+      if (skip.length == phrase.split(" ").length) {
+        skip = [];
+      }
+      
+      strArray.forEach(function(word, index) {
+        function isRevealed() {
+          if (index < wordsRevealed) {
+            return true;
+          }
+          
+          let slice, sliceArray, sliceIndex;
+          
+          do {
+            slice = challenge.slice(
+              0, challenge.indexOf(word, sliceIndex) + 1
+            );
+            sliceArray = slice.split(" ");
+            sliceIndex = slice.length;
+          } while (sliceArray.length - 1 < index);
+          
+          if (slice.length <= charsRevealed) {
+            return true;
+          }
+          
+          return false;
+        }
+        
+        if (
+          (word.length == 1 || isRevealed()) && !skip.includes(index)
+        ) {
+          skip.push(index);
+        }
+      });
     }
+    
+    skipAudit();
     
     do {
       do {
-        obj = discreteRandomSwap(
-          challenge, [" ", "-"], [], infiniswapped
-        );
-      } while (containsSolution(phrase, obj.str, infiniswapped));
+        obj = discreteRandomSwap(challenge, [" ", "-"], [], skip);
+      } while (containsSolution(phrase, obj.str, skip));
       
       if (obj.last == undefined) {
-        infiniswapped = [];
+        skipAudit();
       }
-    } while (obj.last == undefined && charsRevealed < phrase.length);
-    
-    obj.skipped.forEach(function(index) {
-      if (!infiniswapped.includes(index)) {
-        infiniswapped.push(index);
-      }
-    });
+    } while (
+      obj.last == undefined
+      && charsRevealed <= phrase.lastIndexOf(" ") + 1
+    );
     
     if (obj.last != undefined) {
-      infiniswapped.push(obj.last);
+      skip.push(obj.last);
     }
     
     challengeElem.innerHTML = challenge = obj.str;
@@ -239,11 +262,14 @@ function infiniswap(timeout) {
 }
 
 function setChallenge(indexArg) {
-  if (indexArg) {
+  if (indexArg != undefined) {
     clearInterval(infiniswapInterval);
+    clearInterval(revealWordTimeout);
+    clearInterval(revealPhraseTimeout);
   }
   
   charsRevealed = 0;
+  wordsRevealed = 0;
   hintElem.innerHTML = "";
   responseElem.value = "";
   
@@ -278,6 +304,48 @@ function setChallenge(indexArg) {
   }
 }
 
+function revealNextChar(current = charsRevealed) {
+  let randomizedIndex = challenge.indexOf(phrase[current], current);
+  let strArray = challenge.split("");
+  let temp;
+  
+  temp = strArray[current];
+  strArray[current] = strArray[randomizedIndex];
+  strArray[randomizedIndex] = temp;
+  
+  challengeElem.innerHTML = challenge = strArray.join("");
+  
+  if (phrase[current] == " ") {
+    wordsRevealed++;
+  }
+  
+  if (current < phrase.length) {
+    charsRevealed = ++current;
+  }
+  
+  if (
+    current == phrase.length
+    && wordsRevealed < phrase.split(" ").length
+  ) {
+    wordsRevealed++;
+  }
+}
+
+function revealNextLetter(
+  current = charsRevealed,
+  exclusions = [" ", "-"]
+) {
+  while (exclusions.includes(phrase[current])) {
+    if (phrase[current] == " ") {
+      wordsRevealed++;
+    }
+    
+    current++;
+  }
+  
+  revealNextChar(current);
+}
+
 function revealUntilNextCharMismatch(stopChars = []) {
   function seek(current) {
     while (
@@ -292,20 +360,9 @@ function revealUntilNextCharMismatch(stopChars = []) {
   }
   
   let current = seek(charsRevealed);
-  let randomizedIndex = challenge.indexOf(phrase[current], current);
-  let strArray = challenge.split("");
-  let temp;
-  
-  temp = strArray[current];
-  strArray[current] = strArray[randomizedIndex];
-  strArray[randomizedIndex] = temp;
-  
-  challengeElem.innerHTML = challenge = strArray.join("");
-  
-  charsRevealed = ++current;
+  revealNextChar(current);
 }
 
-/*
 function revealUntilNextWordMismatch() {
   let charsUntilNextWordBoundary;
   
@@ -325,7 +382,6 @@ function revealUntilEndOfPhrase() {
     revealUntilNextCharMismatch();
   }
 }
-*/
 
 function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   let charsUntilNextWordBoundary;
@@ -337,7 +393,7 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   }
   
   (function foo(timeout) {
-    setTimeout(function() {
+    revealWordTimeout = setTimeout(function() {
       if (charsRevealed < charsUntilNextWordBoundary) {
         revealUntilNextCharMismatch([" "]);
         foo(timeout);
@@ -366,7 +422,7 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
 
 function revealUntilEndOfPhraseTimeoutDelayed(timeout) {
   (function foo(timeout) {
-    setTimeout(function() {
+    revealPhraseTimeout = setTimeout(function() {
       if (charsRevealed < phrase.length) {
         revealUntilNextCharMismatch();
         foo(timeout);
@@ -445,7 +501,6 @@ function setTitle() {
 
 function initGame() {
   previousIndices = [];
-  charsRevealed = 0;
   responseElem.value = "";
   infiniswapCheckbox.checked = true;
   
@@ -470,6 +525,8 @@ function initGame() {
       == phrase
     ) {
       clearInterval(infiniswapInterval);
+      clearInterval(revealWordTimeout);
+      clearInterval(revealPhraseTimeout);
       
       challengeElem.innerHTML = phrase;
       
@@ -509,6 +566,8 @@ function initGame() {
   
   passButton.addEventListener("click", function(event) {
     clearInterval(infiniswapInterval);
+    clearInterval(revealWordTimeout);
+    clearInterval(revealPhraseTimeout);
     
     previousIndices.pop();
     
