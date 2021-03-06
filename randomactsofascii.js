@@ -30,10 +30,25 @@ let hintButton = document.getElementById("getHint");
 let answerButton = document.getElementById("answer");
 let passButton = document.getElementById("pass");
 let aboutButton = document.getElementById("aboutDialog");
-let revealCharButton = document.getElementById("revealChar");
+let revealLetterButton = document.getElementById("revealLetter");
 let revealWordButton = document.getElementById("revealWord");
 let revealPhraseButton = document.getElementById("revealPhrase");
 let infiniswapCheckbox = document.getElementById("infiniswap");
+
+challengeElem.update = function() {
+  if (charsRevealed > 0) {
+    let revealed;
+    
+    revealed = document.createElement("span");
+    revealed.classList.add("revealed");
+    revealed.innerHTML = challenge.slice(0, charsRevealed);
+    
+    this.innerHTML =
+      revealed.outerHTML + challenge.slice(charsRevealed);
+  } else {
+    this.innerHTML = challenge;
+  }
+}
 
 function randomizeString(
   strArg, delimiters = [" ", "-"], exclusions = [], passes = 1
@@ -175,7 +190,6 @@ function infiniswap(timeout) {
       return;
     }
     
-    let strArray = challenge.split(" ");
     let obj;
     
     function containsSolution(str1, str2, skip = []) {
@@ -203,6 +217,8 @@ function infiniswap(timeout) {
     }
     
     function skipAudit() {
+      let strArray = challenge.split(" ");
+      
       if (skip.length == phrase.split(" ").length) {
         skip = [];
       }
@@ -213,14 +229,16 @@ function infiniswap(timeout) {
             return true;
           }
           
-          let slice, sliceArray, sliceIndex;
+          let slice, sliceArray;
           
           do {
             slice = challenge.slice(
-              0, challenge.indexOf(word, sliceIndex) + 1
+              0,
+              challenge.indexOf(
+                word, (slice ? slice.length : null)
+              ) + 1
             );
             sliceArray = slice.split(" ");
-            sliceIndex = slice.length;
           } while (sliceArray.length - 1 < index);
           
           if (slice.length <= charsRevealed) {
@@ -257,7 +275,8 @@ function infiniswap(timeout) {
       skip.push(obj.last);
     }
     
-    challengeElem.innerHTML = challenge = obj.str;
+    challenge = obj.str;
+    challengeElem.update();
   }, timeout);
 }
 
@@ -297,7 +316,7 @@ function setChallenge(indexArg) {
     challenge = randomizeString(phrase);
   } while (!isFullyRandom(phrase, challenge, " ", ["-"]));
   
-  challengeElem.innerHTML = challenge;
+  challengeElem.update();
   
   if (infiniswapCheckbox.checked) {
     infiniswap(infiniswapDelay);
@@ -313,7 +332,7 @@ function revealNextChar(current = charsRevealed) {
   strArray[current] = strArray[randomizedIndex];
   strArray[randomizedIndex] = temp;
   
-  challengeElem.innerHTML = challenge = strArray.join("");
+  challenge = strArray.join("");
   
   if (phrase[current] == " ") {
     wordsRevealed++;
@@ -321,6 +340,7 @@ function revealNextChar(current = charsRevealed) {
   
   if (current < phrase.length) {
     charsRevealed = ++current;
+    challengeElem.update();
   }
   
   if (
@@ -340,7 +360,8 @@ function revealNextLetter(
       wordsRevealed++;
     }
     
-    current++;
+    charsRevealed = ++current;
+    challengeElem.update();
   }
   
   revealNextChar(current);
@@ -353,7 +374,8 @@ function revealUntilNextCharMismatch(stopChars = []) {
       && current < phrase.length
       && !stopChars.includes(phrase[current])
     ) {
-      current++;
+      charsRevealed = ++current;
+      challengeElem.update();
     }
     
     return current;
@@ -397,24 +419,6 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
       if (charsRevealed < charsUntilNextWordBoundary) {
         revealUntilNextCharMismatch([" "]);
         foo(timeout);
-      }
-      if (
-        charsRevealed > charsUntilNextWordBoundary
-        && phrase[charsRevealed - 1] == " "
-      ) {
-        if (
-          phrase.slice(
-            charsRevealed,
-            phrase.indexOf(" ", charsRevealed)
-          )
-          ==
-          challenge.slice(
-            charsRevealed,
-            challenge.indexOf(" ", charsRevealed)
-          )
-        ) {
-          revealUntilNextWordMismatchTimeoutDelayed(timeout);
-        }
       }
     }, timeout);
   })(timeout);
@@ -578,8 +582,8 @@ function initGame() {
     hintElem.innerHTML = phrases[index].hint;
   });
   
-  revealCharButton.addEventListener("click", function(event) {
-    revealUntilNextCharMismatch();
+  revealLetterButton.addEventListener("click", function(event) {
+    revealNextLetter();
   });
   
   revealWordButton.addEventListener("click", function(event) {
@@ -604,7 +608,7 @@ function initGame() {
   
   [
     answerButton, hintButton, passButton,
-    revealCharButton, revealWordButton, revealPhraseButton
+    revealLetterButton, revealWordButton, revealPhraseButton
   ].forEach(function(button) {
     button.disabled = false;
   });
