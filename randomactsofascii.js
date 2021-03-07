@@ -349,33 +349,37 @@ function revealNextChar(current = charsRevealed) {
   ) {
     wordsRevealed++;
   }
+  
+  return charsRevealed;
 }
 
 function revealNextLetter(
   current = charsRevealed,
   exclusions = [" ", "-"]
 ) {
-  while (exclusions.includes(phrase[current])) {
-    if (phrase[current] == " ") {
-      wordsRevealed++;
+  function seek(current) {
+    while (exclusions.includes(phrase[current])) {
+      return current = revealNextChar(current);
     }
-    
-    charsRevealed = ++current;
-    challengeElem.update();
   }
   
-  revealNextChar(current);
+  current = seek(current);
+  current = revealNextChar(current);
+  seek(current);
 }
 
 function revealUntilNextCharMismatch(stopChars = []) {
   function seek(current) {
+    while (stopChars.includes(phrase[current])) {
+      current = revealNextChar();
+    }
+    
     while (
       phrase[current] == challenge[current]
       && current < phrase.length
       && !stopChars.includes(phrase[current])
     ) {
-      charsRevealed = ++current;
-      challengeElem.update();
+      current = revealNextChar();
     }
     
     return current;
@@ -389,6 +393,10 @@ function revealUntilNextWordMismatch() {
   let charsUntilNextWordBoundary;
   
   if (charsRevealed < phrase.lastIndexOf(" ")) {
+    while (phrase[charsRevealed] == " ") {
+      revealNextChar();
+    }
+    
     charsUntilNextWordBoundary = phrase.indexOf(" ", charsRevealed);
   } else {
     charsUntilNextWordBoundary = phrase.length;
@@ -409,6 +417,10 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   let charsUntilNextWordBoundary;
   
   if (charsRevealed < phrase.lastIndexOf(" ")) {
+    while (phrase[charsRevealed] == " ") {
+      revealNextChar();
+    }
+    
     charsUntilNextWordBoundary = phrase.indexOf(" ", charsRevealed);
   } else {
     charsUntilNextWordBoundary = phrase.length;
