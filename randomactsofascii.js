@@ -21,6 +21,7 @@ let charsRevealed, wordsRevealed;
 let revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
 let revealWordTimeout, revealPhraseTimeout;
+let responseElementBorderBlinkTimeout;
 
 let titleElem = document.getElementById("title");
 let challengeElem = document.getElementById("challenge");
@@ -48,6 +49,14 @@ challengeElem.update = function() {
   } else {
     this.innerHTML = challenge;
   }
+}
+
+function clearTimers() {
+  clearInterval(infiniswapInterval);
+  clearTimeout(revealWordTimeout);
+  clearTimeout(revealPhraseTimeout);
+  clearTimeout(responseElementBorderBlinkTimeout);
+  responseElem.style.removeProperty("border");
 }
 
 function randomizeString(
@@ -282,9 +291,7 @@ function infiniswap(timeout) {
 
 function setChallenge(indexArg) {
   if (indexArg != undefined) {
-    clearInterval(infiniswapInterval);
-    clearInterval(revealWordTimeout);
-    clearInterval(revealPhraseTimeout);
+    clearTimers();
   }
   
   charsRevealed = 0;
@@ -350,42 +357,50 @@ function revealNextChar(current = charsRevealed) {
     wordsRevealed++;
   }
   
-  return charsRevealed;
+  return {
+    char: phrase[current - 1],
+    index: current - 1,
+    next: current
+  };
 }
 
 function revealNextLetter(
-  current = charsRevealed,
-  exclusions = [" ", "-"]
+  current = charsRevealed, exclusions = [" ", "-"]
 ) {
   function seek(current) {
     while (exclusions.includes(phrase[current])) {
-      return current = revealNextChar(current);
-    }
-  }
-  
-  current = seek(current);
-  current = revealNextChar(current);
-  seek(current);
-}
-
-function revealUntilNextCharMismatch(stopChars = []) {
-  function seek(current) {
-    while (stopChars.includes(phrase[current])) {
-      current = revealNextChar();
-    }
-    
-    while (
-      phrase[current] == challenge[current]
-      && current < phrase.length
-      && !stopChars.includes(phrase[current])
-    ) {
-      current = revealNextChar();
+      current = revealNextChar(current).next;
     }
     
     return current;
   }
   
-  let current = seek(charsRevealed);
+  current = seek(current);
+  current = revealNextChar(current).next;
+  seek(current);
+}
+
+function revealUntilNextCharMismatch(
+  current = charsRevealed, stopChars = []
+) {
+  function seek(current) {
+    while (stopChars.includes(phrase[current])) {
+      current = revealNextChar(current).next;
+    }
+    
+    return current;
+  }
+  
+  current = seek(current);
+  
+  while (
+    phrase[current] == challenge[current]
+    && current < phrase.length
+    && !stopChars.includes(phrase[current])
+  ) {
+    current = revealNextChar(current).next;
+  }
+  
   revealNextChar(current);
 }
 
@@ -403,7 +418,7 @@ function revealUntilNextWordMismatch() {
   }
   
   while (charsRevealed < charsUntilNextWordBoundary) {
-    revealUntilNextCharMismatch([" "]);
+    revealUntilNextCharMismatch(charsRevealed, [" "]);
   }
 }
 
@@ -429,7 +444,7 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   (function foo(timeout) {
     revealWordTimeout = setTimeout(function() {
       if (charsRevealed < charsUntilNextWordBoundary) {
-        revealUntilNextCharMismatch([" "]);
+        revealUntilNextCharMismatch(charsRevealed, [" "]);
         foo(timeout);
       }
     }, timeout);
@@ -515,6 +530,21 @@ function setTitle() {
   }, 15);
 }
 
+function responseElementBorderBlink(
+  times = 3, timeout = 225, color = "red"
+) {
+  responseElementBorderBlinkTimeout = setTimeout(function() {
+    responseElem.style.border = "2px solid " + color;
+    
+    responseElementBorderBlinkTimeout = setTimeout(function() {
+      responseElem.style.removeProperty("border");
+      if (--times > 0) {
+        responseElementBorderBlink(times, timeout, color);
+      }
+    }, timeout);
+  }, timeout);
+}
+
 function initGame() {
   previousIndices = [];
   responseElem.value = "";
@@ -524,11 +554,11 @@ function initGame() {
   setChallenge();
   
   answerButton.addEventListener("click", function(event) {
-    function numberOf(ch, str) {
+    function numberOf(str, chars = [" ", "-"]) {
       let count = 0;
       
       Array.prototype.forEach.call(str, function(char) {
-        if (char == ch) {
+        if (chars.includes(char)) {
           count++;
         }
       });
@@ -540,9 +570,7 @@ function initGame() {
       responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
       == phrase
     ) {
-      clearInterval(infiniswapInterval);
-      clearInterval(revealWordTimeout);
-      clearInterval(revealPhraseTimeout);
+      clearTimers();
       
       challengeElem.innerHTML = phrase;
       
@@ -557,8 +585,7 @@ function initGame() {
           ? "\n\n("
             +
               (
-                charsRevealed
-                  - numberOf(" ", phrase.slice(0, charsRevealed))
+                charsRevealed - numberOf(phrase.slice(0, charsRevealed))
               )
             + " letters revealed)"
           : "")
@@ -569,9 +596,10 @@ function initGame() {
       
       setChallenge();
     } else {
-      alert("Incorrect, please try again (or pass)");
+      clearTimeout(responseElementBorderBlinkTimeout);
+      responseElem.style.removeProperty("border");
+      responseElementBorderBlink(3, 225, "red");
     }
-    
   });
   
   responseElem.addEventListener("keyup", function(event) {
@@ -581,9 +609,7 @@ function initGame() {
   });
   
   passButton.addEventListener("click", function(event) {
-    clearInterval(infiniswapInterval);
-    clearInterval(revealWordTimeout);
-    clearInterval(revealPhraseTimeout);
+    clearTimers();
     
     previousIndices.pop();
     
