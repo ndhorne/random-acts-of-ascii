@@ -596,9 +596,12 @@ function initGame() {
       
       setChallenge();
     } else {
+      /*
       clearTimeout(responseElementBorderBlinkTimeout);
       responseElem.style.removeProperty("border");
       responseElementBorderBlink(3, 225, "red");
+      */
+      alert("Incorrect, please try again");
     }
   });
   
