@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 "use strict";
 
-let phrase, phrases, challenge, index, previousIndices;
+let phrase, phrases, challenge, index, previousIndices, startTime;
 let charsRevealed, wordsRevealed;
 let revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
@@ -328,6 +328,8 @@ function setChallenge(indexArg) {
   if (infiniswapCheckbox.checked) {
     infiniswap(infiniswapDelay);
   }
+  
+  startTime = Date.now();
 }
 
 function revealNextChar(current = charsRevealed) {
@@ -575,22 +577,27 @@ function initGame() {
       challengeElem.innerHTML = phrase;
       
       alert(
-        "Correct!"
-        + "\n\n"
-        + "\""
+        "\""
         + phrase[0].toUpperCase()
         + phrase.slice(1)
         + "\""
+        + " solved in "
+        + (((Date.now() - startTime) / 1000).toFixed(2)) +
+        " seconds"
         + (charsRevealed > 0
-          ? "\n\n("
+          ? " with "
             +
               (
                 charsRevealed - numberOf(phrase.slice(0, charsRevealed))
               )
-            + " letters revealed)"
+            + " letter"
+            + (charsRevealed > 1
+              ? "s"
+              : "")
+            + " revealed"
           : "")
         + (hintElem.innerHTML
-          ? "\n\nDid the hint help?"
+          ? ". Did the hint help?"
           : "")
       );
       
