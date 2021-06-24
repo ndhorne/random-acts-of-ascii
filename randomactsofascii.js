@@ -21,7 +21,7 @@ let charsRevealed, wordsRevealed;
 let revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
 let revealWordTimeout, revealPhraseTimeout;
-let responseElementBorderBlinkTimeout;
+let responseElementBlinkTimeout;
 
 let titleElem = document.getElementById("title");
 let challengeElem = document.getElementById("challenge");
@@ -55,8 +55,7 @@ function clearTimers() {
   clearInterval(infiniswapInterval);
   clearTimeout(revealWordTimeout);
   clearTimeout(revealPhraseTimeout);
-  clearTimeout(responseElementBorderBlinkTimeout);
-  responseElem.style.removeProperty("border");
+  clearTimeout(responseElementBlinkTimeout);
 }
 
 function randomizeString(
@@ -532,16 +531,16 @@ function setTitle() {
   }, 15);
 }
 
-function responseElementBorderBlink(
+function responseElementBlink(
   times = 3, timeout = 225, color = "red"
 ) {
-  responseElementBorderBlinkTimeout = setTimeout(function() {
-    responseElem.style.border = "2px solid " + color;
+  responseElementBlinkTimeout = setTimeout(function() {
+    responseElem.style.backgroundColor = color;
     
-    responseElementBorderBlinkTimeout = setTimeout(function() {
-      responseElem.style.removeProperty("border");
+    responseElementBlinkTimeout = setTimeout(function() {
+      responseElem.style.backgroundColor = "initial";
       if (--times > 0) {
-        responseElementBorderBlink(times, timeout, color);
+        responseElementBlink(times, timeout, color);
       }
     }, timeout);
   }, timeout);
@@ -568,7 +567,10 @@ function initGame() {
       return count;
     }
     
-    if (
+    if (responseElem.value == "") {
+      return;
+    }
+    else if (
       responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
       == phrase
     ) {
@@ -600,15 +602,14 @@ function initGame() {
           ? ". Did the hint help?"
           : "")
       );
+      responseElem.focus();
       
       setChallenge();
     } else {
-      /*
-      clearTimeout(responseElementBorderBlinkTimeout);
-      responseElem.style.removeProperty("border");
-      responseElementBorderBlink(3, 225, "red");
-      */
-      alert("Incorrect, please try again");
+      clearTimeout(responseElementBlinkTimeout);
+      responseElem.style.backgroundColor = "initial";
+      responseElementBlink(3, 225, "red");
+      //alert("Incorrect, please try again");
     }
   });
   
@@ -624,22 +625,28 @@ function initGame() {
     previousIndices.pop();
     
     setChallenge();
+    
+    responseElem.focus();
   });
   
   hintButton.addEventListener("click", function(event) {
     hintElem.innerHTML = phrases[index].hint;
+    responseElem.focus();
   });
   
   revealLetterButton.addEventListener("click", function(event) {
     revealNextLetter();
+    responseElem.focus();
   });
   
   revealWordButton.addEventListener("click", function(event) {
     revealUntilNextWordMismatchTimeoutDelayed(revealDelay);
+    responseElem.focus();
   });
   
   revealPhraseButton.addEventListener("click", function(event) {
     revealUntilEndOfPhraseTimeoutDelayed(revealDelay);
+    responseElem.focus();
   });
   
   aboutButton.addEventListener("click", function(event) {
@@ -652,6 +659,8 @@ function initGame() {
     } else {
       clearInterval(infiniswapInterval);
     }
+    
+    responseElem.focus();
   });
   
   [
