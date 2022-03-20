@@ -1,87 +1,143 @@
-<!doctype html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>
-      Random Acts of ASCII
-    </title>
-    <link href="styles.css" rel="stylesheet" type="text/css" />
-  </head>
-  
-  <body>
-    <div id="game">
-      <h1 id="title">
-        Random Acts of ASCII
-      </h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Unscramble common but obfuscated colloquial phrases, sayings, expressions, and idioms of the English language.">
+  <meta name="author" content="Nicholas Horne">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Acts of ASCII</title>
+  <link href="styles.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+  <div id="game">
+    <h1 id="title">Random Acts of ASCII</h1>
+    
+    <div id="main">
+      <p>Can you unscramble this common expression?</p>
       
-      
-      <div id="main">
-        <p>
-          Can you unscramble this common expression?
-        </p>
-        
-        <div id="challenge-response">
-          <span id="challenge"></span>
-          <br />
-          <input type="text" id="response" autofocus />
-          <br />
-          <button type="button" id="answer" disabled>
-            Solve
-          </button>
-          <button type="button" id="pass" disabled>
-            Pass
-          </button>
-        </div>
-        
-        <div id="hint">
-          <button type="button" id="getHint" title="Get hint" disabled>
-            Hint
-          </button><span style="font-weight: 700;">:</span>
-          <br />
-          <span id="hintText"></span>
-        </div>
-        
-        <div id="reveal">
-          <span style="font-size: 14px;">
-            Reveal by
-          </span>
-          <button type="button" id="revealLetter"
-            title="Reveal next letter" disabled
-          >
-            letter
-          </button>
-          <button type="button" id="revealWord"
-            title="Reveal next word" disabled
-          >
-            word
-          </button>
-          <button type="button" id="revealPhrase"
-            title="Reveal phrase" disabled
-          >
-            phrase
-          </button>
-        </div>
+      <div id="challenge-response">
+        <span id="challenge"></span>
+        <br>
+        <input type="text" id="response" autofocus>
+        <br>
+        <button type="button" id="answer" disabled>Solve</button>
+        <button type="button" id="pass" disabled>Pass</button>
       </div>
       
-      <div id="options">
-      <input
-        type="checkbox" id="infiniswap" name="infiniswap" checked
-      />
-      <label
-        for="infiniswap"
-        title="Swaps two random characters of a random word in perpetuity"
-      >
-        Infiniswap
-      </label>
+      <div id="hint">
+        <button
+          type="button"
+          id="getHint"
+          title="Get hint"
+          disabled
+        >Hint</button><span style="font-weight: 700;">:</span>
+        <br>
+        <span id="hintText"></span>
       </div>
       
-      <div id="about">
-        <button type="button" id="aboutDialog">
-          About
-        </button>
+      <div id="reveal">
+        <span style="font-size: 14px;">Reveal by</span>
+        <button
+          type="button"
+          id="revealLetter"
+          title="Reveal next letter"
+          disabled
+        >letter</button>
+        <button
+          type="button"
+          id="revealWord"
+          title="Reveal next word"
+          disabled
+        >word</button>
+        <button
+          type="button"
+          id="revealPhrase"
+          title="Reveal phrase"
+          disabled
+        >phrase</button>
       </div>
     </div>
     
-    <script src="randomactsofascii.js"></script>
-  </body>
+    <div id="options">
+      <input type="checkbox" id="infiniswap" name="infiniswap" checked>
+      <label
+        for="infiniswap"
+        title="Swaps two random characters of a random word in perpetuity"
+      >Infiniswap</label>
+    </div>
+    
+    <div id="about">
+      <button type="button" id="aboutDialog">About</button>
+    </div>
+  </div>
+  
+  <!-- Win Modal -->
+  <div id="winModal" class="modal">
+    
+    <!-- Modal content -->
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <!--
+        <span class="close">&times;</span>
+        -->
+        
+        <h2>Success</h2>
+      </div>
+      
+      <div class="modal-body">
+        <p id="winText"></p>
+      </div> <!-- .modal-body -->
+      
+      <div class="modal-footer">
+        <button type="button" id="winOK">OK</button>
+      </div>
+      
+    </div> <!-- .modal-content -->
+    
+  </div> <!-- #winModal -->
+  
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal">
+    
+    <!-- Modal content -->
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <!--
+        <span class="close">&times;</span>
+        -->
+        
+        <h2>About</h2>
+      </div>
+      
+      <div class="modal-body">
+        <p>
+          Random Acts of ASCII
+        </p>
+        
+        <p>
+          A pointless diversion by Nicholas D. Horne
+        </p>
+        
+        <p>
+          Unscramble common but obfuscated colloquial phrases, sayings, expressions, and idioms of the English language. <!-- The scope of randomization does not extend beyond the limits defined by the various commonly accepted linguistic word boundaries (spaces, hyphens, etc.) of the phrases provided. Hints and revelations are available to be revealed at the player's own discretion; reserve them for particularly cryptic challenges or "reserve" them for any challenges. -->
+        </p>
+        
+        <p>
+          GNU GPLv3 licensed source code available at <a href="https://github.com/ndhorne/random-acts-of-ascii" target="_blank">https://github.com/ndhorne/random-acts-of-ascii</a>
+        </p>
+      </div> <!-- .modal-body -->
+      
+      <div class="modal-footer">
+        <button type="button" id="aboutOK">OK</button>
+      </div>
+      
+    </div> <!-- .modal-content -->
+    
+  </div> <!-- #aboutModal -->
+  
+  <script src="randomactsofascii.js"></script>
+</body>
 </html>

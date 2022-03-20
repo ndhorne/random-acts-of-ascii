@@ -36,6 +36,13 @@ let revealWordButton = document.getElementById("revealWord");
 let revealPhraseButton = document.getElementById("revealPhrase");
 let infiniswapCheckbox = document.getElementById("infiniswap");
 
+let aboutModal = document.getElementById("aboutModal");
+let aboutOKButton = document.getElementById("aboutOK");
+
+let winModal = document.getElementById("winModal");
+let winTextElem = document.getElementById("winText");
+let winOKButton = document.getElementById("winOK");
+
 challengeElem.update = function() {
   if (charsRevealed > 0) {
     let revealed;
@@ -464,6 +471,7 @@ function revealUntilEndOfPhraseTimeoutDelayed(timeout) {
 }
 
 function about() {
+  /*
   let aboutText = [
     "Random Acts of ASCII",
     "A pointless diversion by Nicholas D. Horne",
@@ -482,6 +490,10 @@ function about() {
   alert(
     aboutText.join("\n\n")
   );
+  */
+  
+  responseElem.blur();
+  aboutModal.style.display = "block";
 }
 
 function setTitle() {
@@ -546,6 +558,34 @@ function responseElementBlink(
   }, timeout);
 }
 
+//formats and returns time value in seconds as human readable string
+function getHumanReadableTimeString(time) {
+  let hours, minutes, seconds, result = "";
+  
+  hours = Math.floor(time / 3600);
+  minutes = Math.floor(time % 3600 / 60);
+  seconds = Math.floor(time % 3600 % 60);
+  
+  if (hours > 0) {
+    result += hours + " hour";
+    if (hours > 1) result += "s";
+  }
+  if (minutes > 0) {
+    result += result ? ", " : "";
+    if (seconds == 0 && hours > 0) result += "and ";
+    result += minutes + " minute";
+    if (minutes > 1) result += "s";
+  }
+  if (seconds > 0) {
+    result += result ? ", " : "";
+    if (hours > 0 || minutes > 0) result += "and ";
+    result += seconds + " second";
+    if (seconds > 1) result += "s";
+  }
+  
+  return result;
+}
+
 function initGame() {
   previousIndices = [];
   responseElem.value = "";
@@ -574,50 +614,63 @@ function initGame() {
       responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
       == phrase
     ) {
+      let winStr;
       clearTimers();
       
       challengeElem.innerHTML = phrase;
       
-      alert(
+      winStr =
         "\""
         + phrase[0].toUpperCase()
         + phrase.slice(1)
         + "\""
         + " solved in "
-        + (((Date.now() - startTime) / 1000).toFixed(2)) +
-        " seconds"
-        + (charsRevealed > 0
+        + getHumanReadableTimeString(
+          (((Date.now() - startTime) / 1000).toFixed(2))
+        )
+        + (
+          charsRevealed > 0
           ? " with "
-            +
-              (
-                charsRevealed - numberOf(phrase.slice(0, charsRevealed))
-              )
+            + (
+              charsRevealed - numberOf(phrase.slice(0, charsRevealed))
+            )
             + " letter"
-            + (charsRevealed > 1
+            + (
+              charsRevealed > 1
               ? "s"
-              : "")
-            + " revealed"
-          : "")
-        + (hintElem.innerHTML
-          ? ". Did the hint help?"
-          : "")
-      );
-      responseElem.focus();
+              : ""
+            )
+            + " revealed."
+          : "."
+        )
+        + (
+          hintElem.innerHTML
+          ? " Did the hint help?"
+          : ""
+        )
+      ;
       
-      setChallenge();
+      //alert(winStr);
+      
+      responseElem.blur();
+      winTextElem.innerHTML = winStr;
+      winModal.style.display = "block";
+      
+      //responseElem.focus();
+      //setChallenge();
     } else {
       clearTimeout(responseElementBlinkTimeout);
       responseElem.style.backgroundColor = "initial";
       responseElementBlink(3, 225, "red");
       //alert("Incorrect, please try again");
     }
-  });
+  }, false);
   
   responseElem.addEventListener("keyup", function(event) {
     if (event.keyCode === 13) {
       answerButton.click();
     }
-  });
+  }, false);
   
   passButton.addEventListener("click", function(event) {
     clearTimers();
@@ -627,31 +680,36 @@ function initGame() {
     setChallenge();
     
     responseElem.focus();
-  });
+  }, false);
   
   hintButton.addEventListener("click", function(event) {
     hintElem.innerHTML = phrases[index].hint;
     responseElem.focus();
-  });
+  }, false);
   
   revealLetterButton.addEventListener("click", function(event) {
     revealNextLetter();
     responseElem.focus();
-  });
+  }, false);
   
   revealWordButton.addEventListener("click", function(event) {
     revealUntilNextWordMismatchTimeoutDelayed(revealDelay);
     responseElem.focus();
-  });
+  }, false);
   
   revealPhraseButton.addEventListener("click", function(event) {
     revealUntilEndOfPhraseTimeoutDelayed(revealDelay);
     responseElem.focus();
-  });
+  }, false);
   
   aboutButton.addEventListener("click", function(event) {
     about();
-  });
+  }, false);
+  
+  aboutOKButton.addEventListener("click", function(event) {
+    aboutModal.style.display = "none";
+    responseElem.focus();
+  }, false);
   
   infiniswapCheckbox.addEventListener("change", function(event) {
     if (infiniswapCheckbox.checked) {
@@ -661,7 +719,41 @@ function initGame() {
     }
     
     responseElem.focus();
-  });
+  }, false);
+  
+  winOKButton.addEventListener("click", event => {
+    winModal.style.display = "none";
+    responseElem.focus();
+    setChallenge();
+  }, false);
+  
+  window.addEventListener("click", event => {
+    if (event.target == aboutModal) {
+      aboutModal.style.display = "none";
+      responseElem.focus();
+    }
+    
+    if (event.target == winModal) {
+      winModal.style.display = "none";
+      responseElem.focus();
+      setChallenge();
+    }
+  }, false);
+  
+  document.addEventListener("keydown", event => {
+    if (event.key == "Enter" || event.key == "Escape") {
+      if (winModal.style.display == "block") {
+        winModal.style.display = "none";
+        responseElem.focus();
+        setChallenge();
+      }
+      
+      if (aboutModal.style.display == "block") {
+        aboutModal.style.display = "none";
+        responseElem.focus();
+      }
+    }
+  }, false);
   
   [
     answerButton, hintButton, passButton,
