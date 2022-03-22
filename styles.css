@@ -84,7 +84,7 @@ button {
 /* Modal Content/Box */
 .modal-content {
   background-color: #fefefe;
-  margin: 9% auto; /* 15% from the top and centered */
+  margin: 10% auto; /* 15% from the top and centered */
   padding: 0 20px;
   border: 1px solid #888;
   max-width: 450px;
@@ -105,6 +105,8 @@ button {
   color: black;
   text-decoration: none;
   cursor: pointer;
+  transition-duration: 0.75s;
+  transform: rotate(180deg);
 }
 
 /* Modal Header */

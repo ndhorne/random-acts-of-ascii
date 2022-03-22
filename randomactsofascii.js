@@ -1,5 +1,5 @@
 /*
-Copyright 2021 Nicholas D. Horne
+Copyright 2021, 2022 Nicholas D. Horne
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,11 +37,13 @@ let revealPhraseButton = document.getElementById("revealPhrase");
 let infiniswapCheckbox = document.getElementById("infiniswap");
 
 let aboutModal = document.getElementById("aboutModal");
-let aboutOKButton = document.getElementById("aboutOK");
+let closeAbout = document.getElementById("closeAbout");
+//let aboutOKButton = document.getElementById("aboutOK");
 
 let winModal = document.getElementById("winModal");
 let winTextElem = document.getElementById("winText");
-let winOKButton = document.getElementById("winOK");
+let closeWinModal = document.getElementById("closeWinModal");
+//let winOKButton = document.getElementById("winOK");
 
 challengeElem.update = function() {
   if (charsRevealed > 0) {
@@ -706,10 +708,17 @@ function initGame() {
     about();
   }, false);
   
+  closeAbout.addEventListener("click", function(event) {
+    aboutModal.style.display = "none";
+    responseElem.focus();
+  }, false);
+  
+  /*
   aboutOKButton.addEventListener("click", function(event) {
     aboutModal.style.display = "none";
     responseElem.focus();
   }, false);
+  */
   
   infiniswapCheckbox.addEventListener("change", function(event) {
     if (infiniswapCheckbox.checked) {
@@ -721,11 +730,19 @@ function initGame() {
     responseElem.focus();
   }, false);
   
+  closeWinModal.addEventListener("click", event => {
+    winModal.style.display = "none";
+    responseElem.focus();
+    setChallenge();
+  }, false);
+  
+  /*
   winOKButton.addEventListener("click", event => {
     winModal.style.display = "none";
     responseElem.focus();
     setChallenge();
   }, false);
+  */
   
   window.addEventListener("click", event => {
     if (event.target == aboutModal) {
