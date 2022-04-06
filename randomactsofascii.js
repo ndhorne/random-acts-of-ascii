@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 "use strict";
 
-let phrase, phrases, challenge, index, previousIndices, startTime;
+let phrase, phrases, challenge, index, previousIndices, startTime, state;
 let charsRevealed, wordsRevealed;
 let revealDelay = 200, infiniswapDelay = 5000;
 let titleInterval, infiniswapInterval;
@@ -302,6 +302,7 @@ function setChallenge(indexArg) {
     clearTimers();
   }
   
+  state = 0;
   charsRevealed = 0;
   wordsRevealed = 0;
   hintElem.innerHTML = "";
@@ -325,7 +326,8 @@ function setChallenge(indexArg) {
   }
   
   phrase =
-    phrases[index].phrase.toLowerCase().trim().replace(/ {2,}/g, " ");
+    phrases[index].phrase.toLowerCase().trim().replace(/ {2,}/g, " ")
+  ;
   
   do {
     challenge = randomizeString(phrase);
@@ -336,6 +338,17 @@ function setChallenge(indexArg) {
   if (infiniswapCheckbox.checked) {
     infiniswap(infiniswapDelay);
   }
+  
+  [
+    answerButton, hintButton, aboutButton, responseElem,
+    revealLetterButton, revealWordButton, revealPhraseButton
+  ].forEach(function(element) {
+    element.disabled = false;
+  });
+  
+  passButton.innerHTML = "Pass";
+  
+  responseElem.focus();
   
   startTime = Date.now();
 }
@@ -617,8 +630,9 @@ function initGame() {
       == phrase
     ) {
       let winStr;
-      clearTimers();
       
+      clearTimers();
+      state = 1;
       challengeElem.innerHTML = phrase;
       
       winStr =
@@ -655,8 +669,20 @@ function initGame() {
       //alert(winStr);
       
       responseElem.blur();
-      winTextElem.innerHTML = winStr;
-      winModal.style.display = "block";
+      
+      [
+        answerButton, hintButton, aboutButton, responseElem,
+        revealLetterButton, revealWordButton, revealPhraseButton
+      ].forEach(function(element) {
+        element.disabled = true;
+      });
+      
+      passButton.innerHTML = "Next";
+      
+      setTimeout(() => {
+        winTextElem.innerHTML = winStr;
+        winModal.style.display = "block";
+      }, 750);
       
       //responseElem.focus();
       //setChallenge();
@@ -677,11 +703,13 @@ function initGame() {
   passButton.addEventListener("click", function(event) {
     clearTimers();
     
-    previousIndices.pop();
+    if (state == 0) {
+      previousIndices.pop();
+    }
     
     setChallenge();
     
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   hintButton.addEventListener("click", function(event) {
@@ -708,11 +736,6 @@ function initGame() {
     about();
   }, false);
   
-  closeAbout.addEventListener("click", function(event) {
-    aboutModal.style.display = "none";
-    responseElem.focus();
-  }, false);
-  
   /*
   aboutOKButton.addEventListener("click", function(event) {
     aboutModal.style.display = "none";
@@ -730,9 +753,14 @@ function initGame() {
     responseElem.focus();
   }, false);
   
+  closeAbout.addEventListener("click", function(event) {
+    aboutModal.style.display = "none";
+    responseElem.focus();
+  }, false);
+  
   closeWinModal.addEventListener("click", event => {
     winModal.style.display = "none";
-    responseElem.focus();
+    //responseElem.focus();
     setChallenge();
   }, false);
   
@@ -752,22 +780,31 @@ function initGame() {
     
     if (event.target == winModal) {
       winModal.style.display = "none";
-      responseElem.focus();
+      //responseElem.focus();
       setChallenge();
     }
   }, false);
   
-  document.addEventListener("keydown", event => {
+  document.addEventListener("keyup", event => {
     if (event.key == "Enter" || event.key == "Escape") {
-      if (winModal.style.display == "block") {
-        winModal.style.display = "none";
-        responseElem.focus();
-        setChallenge();
-      }
-      
       if (aboutModal.style.display == "block") {
         aboutModal.style.display = "none";
         responseElem.focus();
+      }
+    }
+    
+    if (event.key == "Enter") {
+      if (winModal.style.display == "block") {
+        winModal.style.display = "none";
+        //responseElem.focus();
+        setChallenge();
+      }
+    }
+    
+    if (event.key == "Escape") {
+      if (winModal.style.display == "block") {
+        winModal.style.display = "none";
+        passButton.focus();
       }
     }
   }, false);
