@@ -35,6 +35,7 @@ let revealLetterButton = document.getElementById("revealLetter");
 let revealWordButton = document.getElementById("revealWord");
 let revealPhraseButton = document.getElementById("revealPhrase");
 let infiniswapCheckbox = document.getElementById("infiniswap");
+let infiniswapRange = document.getElementById("infiniswapRange");
 
 let aboutModal = document.getElementById("aboutModal");
 let closeAbout = document.getElementById("closeAbout");
@@ -54,7 +55,8 @@ challengeElem.update = function() {
     revealed.innerHTML = challenge.slice(0, charsRevealed);
     
     this.innerHTML =
-      revealed.outerHTML + challenge.slice(charsRevealed);
+      revealed.outerHTML + challenge.slice(charsRevealed)
+    ;
   } else {
     this.innerHTML = challenge;
   }
@@ -340,7 +342,7 @@ function setChallenge(indexArg) {
   }
   
   [
-    answerButton, hintButton, aboutButton, responseElem,
+    hintButton, aboutButton, responseElem,
     revealLetterButton, revealWordButton, revealPhraseButton
   ].forEach(function(element) {
     element.disabled = false;
@@ -604,6 +606,7 @@ function getHumanReadableTimeString(time) {
 function initGame() {
   previousIndices = [];
   responseElem.value = "";
+  infiniswapRange.value = 5;
   infiniswapCheckbox.checked = true;
   
   setTitle();
@@ -695,6 +698,12 @@ function initGame() {
   }, false);
   
   responseElem.addEventListener("keyup", function(event) {
+    if (responseElem.value != "") {
+      answerButton.disabled = false;
+    } else {
+      answerButton.disabled = true;
+    }
+    
     if (event.keyCode === 13) {
       answerButton.click();
     }
@@ -714,22 +723,22 @@ function initGame() {
   
   hintButton.addEventListener("click", function(event) {
     hintElem.innerHTML = phrases[index].hint;
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   revealLetterButton.addEventListener("click", function(event) {
     revealNextLetter();
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   revealWordButton.addEventListener("click", function(event) {
     revealUntilNextWordMismatchTimeoutDelayed(revealDelay);
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   revealPhraseButton.addEventListener("click", function(event) {
     revealUntilEndOfPhraseTimeoutDelayed(revealDelay);
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   aboutButton.addEventListener("click", function(event) {
@@ -745,17 +754,29 @@ function initGame() {
   
   infiniswapCheckbox.addEventListener("change", function(event) {
     if (infiniswapCheckbox.checked) {
-      infiniswap(infiniswapDelay);
+      if (infiniswapDelay > 0) {
+        infiniswap(infiniswapDelay);
+      }
     } else {
       clearInterval(infiniswapInterval);
     }
     
-    responseElem.focus();
+    //responseElem.focus();
+  }, false);
+  
+  infiniswapRange.addEventListener("change", function(event) {
+    clearInterval(infiniswapInterval);
+    
+    infiniswapDelay = event.target.value * 1000;
+    
+    if (infiniswapDelay > 0 && infiniswapCheckbox.checked) {
+      infiniswap(infiniswapDelay);
+    }
   }, false);
   
   closeAbout.addEventListener("click", function(event) {
     aboutModal.style.display = "none";
-    responseElem.focus();
+    //responseElem.focus();
   }, false);
   
   closeWinModal.addEventListener("click", event => {
@@ -775,7 +796,7 @@ function initGame() {
   window.addEventListener("click", event => {
     if (event.target == aboutModal) {
       aboutModal.style.display = "none";
-      responseElem.focus();
+      //responseElem.focus();
     }
     
     if (event.target == winModal) {
@@ -789,7 +810,7 @@ function initGame() {
     if (event.key == "Enter" || event.key == "Escape") {
       if (aboutModal.style.display == "block") {
         aboutModal.style.display = "none";
-        responseElem.focus();
+        //responseElem.focus();
       }
     }
     
@@ -810,7 +831,7 @@ function initGame() {
   }, false);
   
   [
-    answerButton, hintButton, passButton,
+    hintButton, passButton,
     revealLetterButton, revealWordButton, revealPhraseButton
   ].forEach(function(button) {
     button.disabled = false;
