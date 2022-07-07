@@ -151,3 +151,11 @@ button {
     transform: translateY(-50%);
   }
 }
+
+#error-modal-content {
+  min-width: fit-content;
+}
+
+#errorStack {
+  font-family: "Courier New", Courier, monospace;
+}

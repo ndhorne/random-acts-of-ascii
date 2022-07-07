@@ -23,28 +23,29 @@ let titleInterval, infiniswapInterval;
 let revealWordTimeout, revealPhraseTimeout;
 let responseElementBlinkTimeout;
 
-let titleElem = document.getElementById("title");
-let challengeElem = document.getElementById("challenge");
-let responseElem = document.getElementById("response");
-let hintElem = document.getElementById("hintText");
-let hintButton = document.getElementById("getHint");
-let answerButton = document.getElementById("answer");
-let passButton = document.getElementById("pass");
-let aboutButton = document.getElementById("aboutDialog");
-let revealLetterButton = document.getElementById("revealLetter");
-let revealWordButton = document.getElementById("revealWord");
-let revealPhraseButton = document.getElementById("revealPhrase");
-let infiniswapCheckbox = document.getElementById("infiniswap");
-let infiniswapRange = document.getElementById("infiniswapRange");
+const titleElem = document.getElementById("title");
+const challengeElem = document.getElementById("challenge");
+const responseElem = document.getElementById("response");
+const hintElem = document.getElementById("hintText");
+const hintButton = document.getElementById("getHint");
+const answerButton = document.getElementById("answer");
+const passButton = document.getElementById("pass");
+const aboutButton = document.getElementById("aboutDialog");
+const revealLetterButton = document.getElementById("revealLetter");
+const revealWordButton = document.getElementById("revealWord");
+const revealPhraseButton = document.getElementById("revealPhrase");
+const infiniswapCheckbox = document.getElementById("infiniswap");
+const infiniswapRange = document.getElementById("infiniswapRange");
 
-let aboutModal = document.getElementById("aboutModal");
-let closeAbout = document.getElementById("closeAbout");
-//let aboutOKButton = document.getElementById("aboutOK");
+const aboutModal = document.getElementById("aboutModal");
+const closeAbout = document.getElementById("closeAbout");
 
-let winModal = document.getElementById("winModal");
-let winTextElem = document.getElementById("winText");
-let closeWinModal = document.getElementById("closeWinModal");
-//let winOKButton = document.getElementById("winOK");
+const winModal = document.getElementById("winModal");
+const winTextElem = document.getElementById("winText");
+const closeWinModal = document.getElementById("closeWinModal");
+
+const errorModal = document.getElementById("errorModal");
+const errorStackElem = document.getElementById("errorStack");
 
 challengeElem.update = function() {
   if (charsRevealed > 0) {
@@ -67,6 +68,7 @@ function clearTimers() {
   clearTimeout(revealWordTimeout);
   clearTimeout(revealPhraseTimeout);
   clearTimeout(responseElementBlinkTimeout);
+  responseElem.style.backgroundColor = "initial";
 }
 
 function randomizeString(
@@ -299,6 +301,55 @@ function infiniswap(timeout) {
   }, timeout);
 }
 
+function checkWidgets(widgets) {
+  if (!(widgets instanceof Array)) {
+    throw new Error("Array expected");
+  }
+  
+  if (widgets.length == 0) {
+    console.error("Array empty, nothing to do");
+  }
+  
+  widgets.forEach(function(widget) {
+    if (
+      !(
+        widget instanceof HTMLButtonElement
+        || widget instanceof HTMLInputElement
+      )
+    ) {
+      throw new Error("Unexpected/invalid widget encountered");
+    }
+  });
+}
+
+function disableWidgets(...widgets) {
+  try {
+    checkWidgets(widgets);
+  } catch (e) {
+    errorStackElem.innerHTML = `${e.stack}`;
+    errorModal.style.display = "block";
+    return;
+  }
+  
+  widgets.forEach(function(element) {
+    element.disabled = true;
+  });
+}
+
+function enableWidgets(...widgets) {
+  try {
+    checkWidgets(widgets);
+  } catch (e) {
+    errorStackElem.innerHTML = `${e.stack}`;
+    errorModal.style.display = "block";
+    return;
+  }
+  
+  widgets.forEach(function(element) {
+    element.disabled = false;
+  });
+}
+
 function setChallenge(indexArg) {
   if (indexArg != undefined) {
     clearTimers();
@@ -341,14 +392,12 @@ function setChallenge(indexArg) {
     infiniswap(infiniswapDelay);
   }
   
-  [
-    hintButton, aboutButton, responseElem,
-    revealLetterButton, revealWordButton, revealPhraseButton
-  ].forEach(function(element) {
-    element.disabled = false;
-  });
-  
-  passButton.innerHTML = "Pass";
+  enableWidgets(...(phrases[index].hint ? [hintButton] : []).concat(
+    [
+      aboutButton, responseElem,
+      revealLetterButton, revealWordButton, revealPhraseButton
+    ]
+  ));
   
   responseElem.focus();
   
@@ -488,7 +537,6 @@ function revealUntilEndOfPhraseTimeoutDelayed(timeout) {
 }
 
 function about() {
-  /*
   let aboutText = [
     "Random Acts of ASCII",
     "A pointless diversion by Nicholas D. Horne",
@@ -507,10 +555,6 @@ function about() {
   alert(
     aboutText.join("\n\n")
   );
-  */
-  
-  responseElem.blur();
-  aboutModal.style.display = "block";
 }
 
 function setTitle() {
@@ -610,7 +654,18 @@ function initGame() {
   infiniswapCheckbox.checked = true;
   
   setTitle();
-  setChallenge();
+  
+  responseElem.addEventListener("keyup", function(event) {
+    if (responseElem.value != "") {
+      answerButton.disabled = false;
+    } else {
+      answerButton.disabled = true;
+    }
+    
+    if (event.keyCode === 13) {
+      answerButton.click();
+    }
+  }, false);
   
   answerButton.addEventListener("click", function(event) {
     function numberOf(str, chars = [" ", "-"]) {
@@ -672,40 +727,24 @@ function initGame() {
       //alert(winStr);
       
       responseElem.blur();
+      answerButton.blur();
       
-      [
+      disableWidgets(
         answerButton, hintButton, aboutButton, responseElem,
         revealLetterButton, revealWordButton, revealPhraseButton
-      ].forEach(function(element) {
-        element.disabled = true;
-      });
-      
-      passButton.innerHTML = "Next";
+      );
       
       setTimeout(() => {
         winTextElem.innerHTML = winStr;
         winModal.style.display = "block";
       }, 750);
       
-      //responseElem.focus();
       //setChallenge();
     } else {
       clearTimeout(responseElementBlinkTimeout);
       responseElem.style.backgroundColor = "initial";
       responseElementBlink(3, 225, "red");
       //alert("Incorrect, please try again");
-    }
-  }, false);
-  
-  responseElem.addEventListener("keyup", function(event) {
-    if (responseElem.value != "") {
-      answerButton.disabled = false;
-    } else {
-      answerButton.disabled = true;
-    }
-    
-    if (event.keyCode === 13) {
-      answerButton.click();
     }
   }, false);
   
@@ -716,9 +755,16 @@ function initGame() {
       previousIndices.pop();
     }
     
-    setChallenge();
+    disableWidgets(
+      answerButton, hintButton, aboutButton, responseElem,
+      revealLetterButton, revealWordButton, revealPhraseButton
+    );
     
-    //responseElem.focus();
+    if (passButton.innerHTML != "Pass") {
+      passButton.innerHTML = "Pass";
+    }
+    
+    setChallenge();
   }, false);
   
   hintButton.addEventListener("click", function(event) {
@@ -742,23 +788,18 @@ function initGame() {
   }, false);
   
   aboutButton.addEventListener("click", function(event) {
-    about();
+    aboutModal.style.display = "block";
   }, false);
-  
-  /*
-  aboutOKButton.addEventListener("click", function(event) {
-    aboutModal.style.display = "none";
-    responseElem.focus();
-  }, false);
-  */
   
   infiniswapCheckbox.addEventListener("change", function(event) {
     if (infiniswapCheckbox.checked) {
       if (infiniswapDelay > 0) {
         infiniswap(infiniswapDelay);
       }
+      infiniswapRange.disabled = false;
     } else {
       clearInterval(infiniswapInterval);
+      infiniswapRange.disabled = true;
     }
     
     //responseElem.focus();
@@ -781,17 +822,8 @@ function initGame() {
   
   closeWinModal.addEventListener("click", event => {
     winModal.style.display = "none";
-    //responseElem.focus();
     setChallenge();
   }, false);
-  
-  /*
-  winOKButton.addEventListener("click", event => {
-    winModal.style.display = "none";
-    responseElem.focus();
-    setChallenge();
-  }, false);
-  */
   
   window.addEventListener("click", event => {
     if (event.target == aboutModal) {
@@ -801,41 +833,30 @@ function initGame() {
     
     if (event.target == winModal) {
       winModal.style.display = "none";
-      //responseElem.focus();
       setChallenge();
     }
   }, false);
   
   document.addEventListener("keyup", event => {
-    if (event.key == "Enter" || event.key == "Escape") {
-      if (aboutModal.style.display == "block") {
-        aboutModal.style.display = "none";
-        //responseElem.focus();
-      }
+    if (event.key == "Escape" && aboutModal.style.display == "block") {
+      aboutModal.style.display = "none";
+      //responseElem.focus();
     }
     
-    if (event.key == "Enter") {
-      if (winModal.style.display == "block") {
-        winModal.style.display = "none";
-        //responseElem.focus();
-        setChallenge();
-      }
+    if (event.key == "Enter" && winModal.style.display == "block") {
+      winModal.style.display = "none";
+      setChallenge();
     }
     
-    if (event.key == "Escape") {
-      if (winModal.style.display == "block") {
-        winModal.style.display = "none";
-        passButton.focus();
-      }
+    if (event.key == "Escape" && winModal.style.display == "block") {
+      winModal.style.display = "none";
+      passButton.innerHTML = "Next";
+      passButton.focus();
     }
   }, false);
   
-  [
-    hintButton, passButton,
-    revealLetterButton, revealWordButton, revealPhraseButton
-  ].forEach(function(button) {
-    button.disabled = false;
-  });
+  setChallenge();
+  enableWidgets(passButton);
 }
 
 async function initPhrases() {

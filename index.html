@@ -31,8 +31,9 @@
           title="Get hint"
           disabled
         >Hint</button><span style="font-weight: 700;">:</span>
-        <br>
-        <span id="hintText"></span>
+        <div id="hintTextDiv">
+          <span id="hintText"></span>
+        </div>
       </div>
       
       <div id="reveal">
@@ -68,7 +69,7 @@
       <input
         type="range"
         id="infiniswapRange"
-        title="Infiniswap Interval"
+        title="Infiniswap interval (lower is faster)"
         min="1"
         max="10"
         value="5"
@@ -97,9 +98,7 @@
         <p id="winText"></p>
       </div> <!-- .modal-body -->
       
-      <div class="modal-footer">
-        <!-- <button type="button" id="winOK">OK</button> -->
-      </div>
+      <div class="modal-footer"></div>
       
     </div> <!-- .modal-content -->
     
@@ -135,13 +134,37 @@
         </p>
       </div> <!-- .modal-body -->
       
-      <div class="modal-footer">
-        <!-- <button type="button" id="aboutOK">OK</button> -->
-      </div>
+      <div class="modal-footer"></div>
       
     </div> <!-- .modal-content -->
     
   </div> <!-- #aboutModal -->
+  
+  <!-- Error Modal -->
+  <div id="errorModal" class="modal">
+    
+    <!-- Modal content -->
+    <div id="error-modal-content" class="modal-content">
+      
+      <div class="modal-header">
+        <!-- <span id="closeAbout" class="close">&times;</span> -->
+        
+        <h2>Error</h2>
+      </div>
+      
+      <div class="modal-body">
+        <p>
+          You've done something I wasn't expecting you to do:
+        </p>
+        
+        <pre id="errorStack"></pre>
+      </div> <!-- .modal-body -->
+      
+      <div class="modal-footer"></div>
+      
+    </div> <!-- .modal-content -->
+    
+  </div> <!-- #errorModal -->
   
   <script src="randomactsofascii.js"></script>
 </body>
