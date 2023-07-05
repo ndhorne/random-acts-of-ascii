@@ -116,7 +116,7 @@ button {
   text-decoration: none;
   cursor: pointer;
   transition-duration: 0.75s;
-  transform: rotate(180deg);
+  /* transform: rotate(180deg); */
 }
 
 /* Modal Header */
