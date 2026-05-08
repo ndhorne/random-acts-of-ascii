@@ -1,5 +1,5 @@
 /*
-Copyright 2021, 2022 Nicholas D. Horne
+Copyright 2021, 2022, 2026 Nicholas D. Horne
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -74,13 +74,13 @@ function clearTimers() {
 function randomizeString(
   strArg, delimiters = [" ", "-"], exclusions = [], passes = 1
 ) {
-  let delimiter = delimiters.shift();
+  const delimiter = delimiters.shift();
   let strArray = strArg.split(delimiter);
   
   for (let i = 0; i < passes; i++) {
     strArray = strArray.map(strElem => {
       if (delimiters[0] ? !strElem.includes(delimiters[0]) : true) {
-        let charArray = strElem.split("");
+        const charArray = strElem.split("");
         
         for (let i = 0; i < charArray.length; i++) {
           let randomIndex, temp;
@@ -109,29 +109,29 @@ function randomizeString(
 }
 
 function isFullyRandom(str1, str2, delimiter = " ", exclusions = []) {
-  if (typeof str1 != "string" || typeof str2 != "string") {
+  if (typeof str1 !== "string" || typeof str2 !== "string") {
     throw new Error("Arguments must both be of type string");
   }
-  if (str1.length != str2.length) {
+  if (str1.length !== str2.length) {
     throw new Error("Arguments must be of equal length");
   }
   
-  let str1Array = str1.split(delimiter);
-  let str2Array = str2.split(delimiter);
+  const str1Array = str1.split(delimiter);
+  const str2Array = str2.split(delimiter);
   
   outer: for (let i = 0; i < str1Array.length; i++) {
-    if (str1Array[i].length == 1) {
+    if (str1Array[i].length === 1) {
       continue;
     }
     
-    let occurences = {}, halfLength = str1Array[i].length / 2;;
+    const occurences = {}, halfLength = str1Array[i].length / 2;;
     Array.prototype.forEach.call(str1Array[i], function(char) {
       occurences[char] = (occurences[char] || 0) + 1;
     });
     
     for (let char in occurences) {
       if (occurences[char] > halfLength) {
-        if (str1Array[i] == str2Array[i]) {
+        if (str1Array[i] === str2Array[i]) {
           return false;
         } else {
           continue outer;
@@ -140,7 +140,7 @@ function isFullyRandom(str1, str2, delimiter = " ", exclusions = []) {
     }
     
     for (let j = 0; j < str1Array[i].length; j++) {
-      if (str1Array[i][j] == str2Array[i][j]) {
+      if (str1Array[i][j] === str2Array[i][j]) {
         if (exclusions.includes(str1Array[i][j])) {
           continue;
         } else {
@@ -156,7 +156,7 @@ function isFullyRandom(str1, str2, delimiter = " ", exclusions = []) {
 function discreteRandomSwap(
   strArg, delimiters = [" ", "-"], exclusions = [], skip = []
 ) {
-  let delimiter = delimiters.shift();
+  const delimiter = delimiters.shift();
   let strArray = strArg.split(delimiter);
   let randomIndex;
   
@@ -166,7 +166,7 @@ function discreteRandomSwap(
     } while (skip.includes(randomIndex));
     
     strArray = strArray.map(function(word, currentIndex) {
-      if (currentIndex != randomIndex) {
+      if (currentIndex !== randomIndex) {
         return word;
       } else {
         if (delimiters[0] ? word.includes(delimiters[0]) : false) {
@@ -183,7 +183,7 @@ function discreteRandomSwap(
             do {
               rand2 = Math.floor(Math.random() * wordArray.length);
             } while (exclusions.includes(wordArray[rand2]));
-          } while (wordArray[rand1] == wordArray[rand2]);
+          } while (wordArray[rand1] === wordArray[rand2]);
           
           temp = wordArray[rand1];
           wordArray[rand1] = wordArray[rand2];
@@ -214,22 +214,22 @@ function infiniswap(timeout) {
     let obj;
     
     function containsSolution(str1, str2, skip = []) {
-      if (typeof str1 != "string" || typeof str2 != "string") {
+      if (typeof str1 !== "string" || typeof str2 !== "string") {
         throw new Error("Arguments must both be of type string");
       }
-      if (str1.length != str2.length) {
+      if (str1.length !== str2.length) {
         throw new Error("Arguments must be of equal length");
       }
       
-      let str1Array = str1.split(" ");
-      let str2Array = str2.split(" ");
+      const str1Array = str1.split(" ");
+      const str2Array = str2.split(" ");
       
       for (let i = 0; i < str1Array.length; i++) {
         if (skip.includes(i) || str1Array[i].length < 3) {
           continue;
         }
         
-        if (str1Array[i] == str2Array[i]) {
+        if (str1Array[i] === str2Array[i]) {
           return true;
         }
       }
@@ -238,9 +238,9 @@ function infiniswap(timeout) {
     }
     
     function skipAudit() {
-      let strArray = challenge.split(" ");
+      const strArray = challenge.split(" ");
       
-      if (skip.length == phrase.split(" ").length) {
+      if (skip.length === phrase.split(" ").length) {
         skip = [];
       }
       
@@ -270,7 +270,7 @@ function infiniswap(timeout) {
         }
         
         if (
-          (word.length == 1 || isRevealed()) && !skip.includes(index)
+          (word.length === 1 || isRevealed()) && !skip.includes(index)
         ) {
           skip.push(index);
         }
@@ -284,15 +284,15 @@ function infiniswap(timeout) {
         obj = discreteRandomSwap(challenge, [" ", "-"], [], skip);
       } while (containsSolution(phrase, obj.str, skip));
       
-      if (obj.last == undefined) {
+      if (obj.last === undefined) {
         skipAudit();
       }
     } while (
-      obj.last == undefined
+      obj.last === undefined
       && charsRevealed <= phrase.lastIndexOf(" ") + 1
     );
     
-    if (obj.last != undefined) {
+    if (obj.last !== undefined) {
       skip.push(obj.last);
     }
     
@@ -306,7 +306,7 @@ function checkWidgets(widgets) {
     throw new Error("Array expected");
   }
   
-  if (widgets.length == 0) {
+  if (widgets.length === 0) {
     console.error("Array empty, nothing to do");
   }
   
@@ -351,7 +351,7 @@ function enableWidgets(...widgets) {
 }
 
 function setChallenge(indexArg) {
-  if (indexArg != undefined) {
+  if (indexArg !== undefined) {
     clearTimers();
   }
   
@@ -362,11 +362,11 @@ function setChallenge(indexArg) {
   responseElem.value = "";
   
   if (
-    typeof indexArg != "number"
+    typeof indexArg !== "number"
     || indexArg < 0
     || indexArg >= phrases.length
   ) {
-    if (previousIndices.length == phrases.length) {
+    if (previousIndices.length === phrases.length) {
       console.log("Phrases exhausted, starting over");
       previousIndices = [];
     }
@@ -405,8 +405,8 @@ function setChallenge(indexArg) {
 }
 
 function revealNextChar(current = charsRevealed) {
-  let randomizedIndex = challenge.indexOf(phrase[current], current);
-  let strArray = challenge.split("");
+  const randomizedIndex = challenge.indexOf(phrase[current], current);
+  const strArray = challenge.split("");
   let temp;
   
   temp = strArray[current];
@@ -415,7 +415,7 @@ function revealNextChar(current = charsRevealed) {
   
   challenge = strArray.join("");
   
-  if (phrase[current] == " ") {
+  if (phrase[current] === " ") {
     wordsRevealed++;
   }
   
@@ -425,7 +425,7 @@ function revealNextChar(current = charsRevealed) {
   }
   
   if (
-    current == phrase.length
+    current === phrase.length
     && wordsRevealed < phrase.split(" ").length
   ) {
     wordsRevealed++;
@@ -468,7 +468,7 @@ function revealUntilNextCharMismatch(
   current = seek(current);
   
   while (
-    phrase[current] == challenge[current]
+    phrase[current] === challenge[current]
     && current < phrase.length
     && !stopChars.includes(phrase[current])
   ) {
@@ -482,7 +482,7 @@ function revealUntilNextWordMismatch() {
   let charsUntilNextWordBoundary;
   
   if (charsRevealed < phrase.lastIndexOf(" ")) {
-    while (phrase[charsRevealed] == " ") {
+    while (phrase[charsRevealed] === " ") {
       revealNextChar();
     }
     
@@ -506,7 +506,7 @@ function revealUntilNextWordMismatchTimeoutDelayed(timeout) {
   let charsUntilNextWordBoundary;
   
   if (charsRevealed < phrase.lastIndexOf(" ")) {
-    while (phrase[charsRevealed] == " ") {
+    while (phrase[charsRevealed] === " ") {
       revealNextChar();
     }
     
@@ -558,8 +558,9 @@ function about() {
 }
 
 function setTitle() {
-  let titleStr = "Random Acts of ASCII";
-  let titleRandom, doneIndices = [];
+  const titleStr = "Random Acts of ASCII";
+  const doneIndices = [];
+  let titleRandom;
   
   do {
     titleRandom = randomizeString(titleStr);
@@ -580,25 +581,25 @@ function setTitle() {
     } while (doneIndices.includes(rand2));
     
     if (
-      (titleStr[rand1] != titleArray[rand1])
-      && (titleStr[rand2] != titleArray[rand2])
+      (titleStr[rand1] !== titleArray[rand1])
+      && (titleStr[rand2] !== titleArray[rand2])
     ) {
       temp = titleArray[rand1];
       titleArray[rand1] = titleArray[rand2];
       titleArray[rand2] = temp;
     }
     
-    if (titleStr[rand1] == titleArray[rand1]) {
+    if (titleStr[rand1] === titleArray[rand1]) {
       doneIndices.push(rand1);
     }
     
-    if (titleStr[rand2] == titleArray[rand2]) {
+    if (titleStr[rand2] === titleArray[rand2]) {
       doneIndices.push(rand2);
     }
     
     titleElem.innerHTML = titleArray.join("");
     
-    if (titleElem.innerHTML == titleStr) {
+    if (titleElem.innerHTML === titleStr) {
       clearInterval(titleInterval);
     }
   }, 15);
@@ -623,9 +624,9 @@ function responseElementBlink(
 function getHumanReadableTimeString(time) {
   let hours, minutes, seconds, result = "";
   
-  hours = Math.floor(time / 3600);
-  minutes = Math.floor(time % 3600 / 60);
-  seconds = Math.floor(time % 3600 % 60);
+  hours = Math.floor(Number(time) / 3600);
+  minutes = Math.floor(Number(time) % 3600 / 60);
+  seconds = Math.floor(Number(time) % 3600 % 60);
   
   if (hours > 0) {
     result += hours + " hour";
@@ -633,7 +634,7 @@ function getHumanReadableTimeString(time) {
   }
   if (minutes > 0) {
     result += result ? ", " : "";
-    if (seconds == 0 && hours > 0) result += "and ";
+    if (seconds === 0 && hours > 0) result += "and ";
     result += minutes + " minute";
     if (minutes > 1) result += "s";
   }
@@ -656,7 +657,7 @@ function initGame() {
   setTitle();
   
   responseElem.addEventListener("keyup", function(event) {
-    if (responseElem.value != "") {
+    if (responseElem.value !== "") {
       answerButton.disabled = false;
     } else {
       answerButton.disabled = true;
@@ -680,12 +681,12 @@ function initGame() {
       return count;
     }
     
-    if (responseElem.value == "") {
+    if (responseElem.value === "") {
       return;
     }
     else if (
       responseElem.value.toLowerCase().trim().replace(/ {2,}/g, " ")
-      == phrase
+      === phrase
     ) {
       let winStr;
       
@@ -751,7 +752,7 @@ function initGame() {
   passButton.addEventListener("click", function(event) {
     clearTimers();
     
-    if (state == 0) {
+    if (state === 0) {
       previousIndices.pop();
     }
     
@@ -760,7 +761,7 @@ function initGame() {
       revealLetterButton, revealWordButton, revealPhraseButton
     );
     
-    if (passButton.innerHTML != "Pass") {
+    if (passButton.innerHTML !== "Pass") {
       passButton.innerHTML = "Pass";
     }
     
@@ -808,7 +809,7 @@ function initGame() {
   infiniswapRange.addEventListener("change", function(event) {
     clearInterval(infiniswapInterval);
     
-    infiniswapDelay = event.target.value * 1000;
+    infiniswapDelay = (10 - event.target.value) * 1000;
     
     if (infiniswapDelay > 0 && infiniswapCheckbox.checked) {
       infiniswap(infiniswapDelay);
@@ -826,29 +827,29 @@ function initGame() {
   }, false);
   
   window.addEventListener("click", event => {
-    if (event.target == aboutModal) {
+    if (event.target === aboutModal) {
       aboutModal.style.display = "none";
       //responseElem.focus();
     }
     
-    if (event.target == winModal) {
+    if (event.target === winModal) {
       winModal.style.display = "none";
       setChallenge();
     }
   }, false);
   
   document.addEventListener("keyup", event => {
-    if (event.key == "Escape" && aboutModal.style.display == "block") {
+    if (event.key === "Escape" && aboutModal.style.display === "block") {
       aboutModal.style.display = "none";
       //responseElem.focus();
     }
     
-    if (event.key == "Enter" && winModal.style.display == "block") {
+    if (event.key === "Enter" && winModal.style.display === "block") {
       winModal.style.display = "none";
       setChallenge();
     }
     
-    if (event.key == "Escape" && winModal.style.display == "block") {
+    if (event.key === "Escape" && winModal.style.display === "block") {
       winModal.style.display = "none";
       passButton.innerHTML = "Next";
       passButton.focus();
@@ -861,8 +862,8 @@ function initGame() {
 
 async function initPhrases() {
   try {
-    let response = await fetch("phrases.json");
-    let phrases = JSON.parse(await response.text());
+    const response = await fetch("phrases.json");
+    const phrases = JSON.parse(await response.text());
     
     return phrases;
   } catch (e) {
